@@ -69,7 +69,12 @@ class UsuarioController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $usuario = Usuario::findOrFail($id);
+    
+        return response()->json([
+            'success' => true,
+            'data' => $usuario
+        ]); 
     }
 
     /**
@@ -128,6 +133,12 @@ class UsuarioController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $usuario = Usuario::findOrFail($id);
+    $usuario->delete();
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Usuario eliminado correctamente'
+        ]);
     }
 }
