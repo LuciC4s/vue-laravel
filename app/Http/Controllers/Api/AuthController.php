@@ -23,6 +23,10 @@ class AuthController extends Controller
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
+        
+        // Asignar el tenant actual al usuario
+        $validated['tenant_id'] = tenant('id');
+        
         $usuario = Usuario::create($validated);
 
         // Generar token
@@ -45,11 +49,17 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $usuario = Usuario::where('email', $request->email)->first();
+        // Obtener el tenant actual
+        $currentTenantId = tenant('id');
+        
+        // Buscar usuario solo en el tenant actual
+        $usuario = Usuario::where('email', $request->email)
+                          ->where('tenant_id', $currentTenantId)
+                          ->first();
 
         if (! $usuario || ! Hash::check($request->password, $usuario->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Credenciales inválidas.'],
+                'email' => ['Credenciales inválidas o usuario no pertenece a este tenant.'],
             ]);
         }
 

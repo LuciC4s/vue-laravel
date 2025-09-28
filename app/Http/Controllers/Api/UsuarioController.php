@@ -15,7 +15,12 @@ class UsuarioController extends Controller
      */
     public function index()
     {
-        return response()->json(Usuario::all());
+        $usuarios = Usuario::forCurrentTenant()->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $usuarios
+        ]);
     }
 
     /**
@@ -48,8 +53,9 @@ class UsuarioController extends Controller
             ], 400);
         }
 
-
         $validated['password'] = Hash::make($validated['password']);
+        
+        $validated['tenant_id'] = tenant('id');
 
         $usuario = Usuario::create($validated);
         if (!$usuario) {
@@ -69,7 +75,7 @@ class UsuarioController extends Controller
      */
     public function show(string $id)
     {
-        $usuario = Usuario::findOrFail($id);
+        $usuario = Usuario::forCurrentTenant()->findOrFail($id);
     
         return response()->json([
             'success' => true,
@@ -90,7 +96,7 @@ class UsuarioController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $usuario = Usuario::findOrFail($id);
+        $usuario = Usuario::forCurrentTenant()->findOrFail($id);
 
         if ($usuario->rol !== 'admin') {
             return response()->json([
@@ -133,8 +139,8 @@ class UsuarioController extends Controller
      */
     public function destroy(string $id)
     {
-        $usuario = Usuario::findOrFail($id);
-    $usuario->delete();
+        $usuario = Usuario::forCurrentTenant()->findOrFail($id);
+        $usuario->delete();
     
         return response()->json([
             'success' => true,

@@ -14,7 +14,8 @@ class TareaController extends Controller
 
     public function index(): JsonResponse
     {
-        $tareas = Tarea::with('usuario:id,nombre')
+        $tareas = Tarea::forCurrentTenant()
+            ->with('usuario:id,nombre')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -34,6 +35,8 @@ class TareaController extends Controller
             'fecha_vencimiento' => 'nullable|date|after_or_equal:today'
         ]);
 
+        $validated['tenant_id'] = tenant('id');
+
         $tarea = Tarea::create($validated);
 
         return response()->json([
@@ -45,6 +48,13 @@ class TareaController extends Controller
 
     public function show(Tarea $tarea): JsonResponse
     {
+        if ($tarea->tenant_id !== tenant('id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tarea no encontrada'
+            ], 404);
+        }
+
         return response()->json([
             'success' => true,
             'data' => $tarea->load('usuario:id,nombre')
@@ -53,6 +63,13 @@ class TareaController extends Controller
 
     public function update(Request $request, Tarea $tarea): JsonResponse
     {
+        if ($tarea->tenant_id !== tenant('id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tarea no encontrada'
+            ], 404);
+        }
+
         $validated = $request->validate([
             'usuario_id' => 'sometimes|exists:usuarios,id',
             'titulo' => 'sometimes|string|max:150',
@@ -72,6 +89,13 @@ class TareaController extends Controller
 
     public function destroy(Tarea $tarea): JsonResponse
     {
+        if ($tarea->tenant_id !== tenant('id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tarea no encontrada'
+            ], 404);
+        }
+
         $tarea->delete();
 
         return response()->json([
@@ -82,7 +106,15 @@ class TareaController extends Controller
 
     public function porUsuario(Usuario $usuario): JsonResponse
     {
+        if ($usuario->tenant_id !== tenant('id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no encontrado'
+            ], 404);
+        }
+
         $tareas = $usuario->tareas()
+            ->forCurrentTenant()
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -103,7 +135,8 @@ class TareaController extends Controller
             ], 400);
         }
 
-        $tareas = Tarea::with('usuario:id,nombre')
+        $tareas = Tarea::forCurrentTenant()
+            ->with('usuario:id,nombre')
             ->porEstado($estado)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -116,7 +149,8 @@ class TareaController extends Controller
 
     public function vencidas(): JsonResponse
     {
-        $tareas = Tarea::with('usuario:id,nombre')
+        $tareas = Tarea::forCurrentTenant()
+            ->with('usuario:id,nombre')
             ->vencidas()
             ->orderBy('fecha_vencimiento', 'asc')
             ->get();
