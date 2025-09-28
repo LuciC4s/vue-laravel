@@ -18,6 +18,7 @@ class Usuario extends Authenticatable
         'email',
         'password',
         'rol',
+        'tenant_id',
     ];
 
     // Ocultar el password al devolver el modelo en JSON
@@ -33,5 +34,21 @@ class Usuario extends Authenticatable
     public function tareas()
     {
         return $this->hasMany(Tarea::class);
+    }
+    
+    /**
+     * Relación con el tenant al que pertenece el usuario
+     */
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
+    
+    /**
+     * Scope para filtrar usuarios por tenant actual
+     */
+    public function scopeForCurrentTenant($query)
+    {
+        return $query->where('tenant_id', tenant('id'));
     }
 }

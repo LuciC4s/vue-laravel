@@ -13,6 +13,7 @@ class Tarea extends Model
 
     protected $fillable = [
         'usuario_id',
+        'tenant_id',
         'titulo',
         'descripcion',
         'estado',
@@ -44,5 +45,15 @@ class Tarea extends Model
     {
         return $query->where('fecha_vencimiento', '<', now())
                     ->where('estado', '!=', 'completada');
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
+
+    public function scopeForCurrentTenant($query)
+    {
+        return $query->where('tenant_id', tenant('id'));
     }
 }
